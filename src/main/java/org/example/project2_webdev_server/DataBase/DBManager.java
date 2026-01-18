@@ -16,7 +16,7 @@ import java.util.List;
 public class DBManager {
     private static final String URL = "jdbc:mysql://localhost:3306/project2";   // אנה שימי לב! כשנגדיר את הדאטה בייס זה יהיה עם הפרטים האלה וחייב לקרוא לסכמה "project2"
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "878982eva"; // אנה כשאת מריצה אצלך שימי 1234
+    private static final String PASSWORD = ""; // אנה כשאת מריצה אצלך שימי 1234
 
     private Connection connection;
 
