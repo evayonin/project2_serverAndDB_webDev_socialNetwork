@@ -5,6 +5,7 @@ import org.example.project2_webdev_server.Entity.User;
 import org.example.project2_webdev_server.Response.BasicResponse;
 import org.example.project2_webdev_server.Response.BooleanResponse;
 import org.example.project2_webdev_server.Response.LoginResponse;
+import org.example.project2_webdev_server.Utils.GeneralUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,7 @@ public class GenaralController {
     public BasicResponse addUser (String username, String password) {
         if (username != null && !username.isEmpty()) {
             if (password != null && !password.isEmpty()) {
-                User user = new User(username, password);
+                User user = new User(username, GeneralUtils.hash("", password)); // עם ססמה מגובבת
                 dbManager.createUserOnDb(user);
                 return new BasicResponse(true, null);
             } else {
@@ -54,6 +55,7 @@ public class GenaralController {
     public BasicResponse signIn (String username, String password) { // ללא אותנטיקציה
         if (username != null && !username.isEmpty()) {
             if (password != null && !password.isEmpty()) {
+                password = GeneralUtils.hash("", password); //גיבוב
                 User user = dbManager.getUserByUsernameAndPassword(username, password); // אם יש יוזר כזה מחזיר אותו אם אין חוזר נאל
                 if (user != null) { // אם חזר יוזר (קיים כזה)
                     return new LoginResponse(true, null, user); // הכניסה לחשבון הצליחה נחזיר תשובה בהתאם
