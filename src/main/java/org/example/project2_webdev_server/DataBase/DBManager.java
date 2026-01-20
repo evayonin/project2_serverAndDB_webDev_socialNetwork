@@ -37,7 +37,7 @@ public class DBManager {
                             "VALUE (?, ?)");
             statement.setString(1, user.getUsername());
             statement.setString(2, user.getPassword());
-            statement.executeUpdate();
+            statement.executeUpdate(); // יש שינוי בטבלה לכן אפדייט ולא קוורי כי לא חוזר משהו
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -60,24 +60,6 @@ public class DBManager {
 
         }
         return null;
-    }
-
-
-    public boolean isUsernameAvailable (String username) { // בדיקה אם היוזרניים קיים כשצנסים להרשם עם יוזרניים שכבר קיים
-        try {
-            PreparedStatement preparedStatement = this.connection
-                    .prepareStatement("SELECT id FROM users WHERE username = ?");
-            preparedStatement.setString(1, username);
-            preparedStatement.setMaxRows(1);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (SQLException e) {
-        }
-        return false;
     }
 
 
@@ -124,7 +106,7 @@ public class DBManager {
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
-    profile_image_url VARCHAR(255)
+    profile_image_url VARCHAR(255) // יכול להיות נאל כי בהוספת יוזר חדש עדיין אין קישור בטבלה
 );
 
 

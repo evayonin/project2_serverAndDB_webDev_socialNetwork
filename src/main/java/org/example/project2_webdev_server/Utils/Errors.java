@@ -5,4 +5,5 @@ public class Errors {
     public static final int ERROR_MISSING_PASSWORD = 3001; // user didn't enter password
     public static final int ERROR_WRONG_PASSWORD = 3002; //username doesnt exist or wrong password
     public static final int ERROR_NO_ACCOUNT = 3003;
+    public static final int ERROR_USERNAME_ALREADY_EXISTS = 3004;
 }

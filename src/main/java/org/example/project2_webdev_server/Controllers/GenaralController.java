@@ -7,7 +7,9 @@ import org.example.project2_webdev_server.Response.BooleanResponse;
 import org.example.project2_webdev_server.Response.LoginResponse;
 import org.example.project2_webdev_server.Utils.GeneralUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static org.example.project2_webdev_server.Utils.Errors.*;
@@ -18,17 +20,16 @@ public class GenaralController {
     @Autowired
     private DBManager dbManager;
 
-    @RequestMapping("/hello") // בדיקה מהעמוד סיין אין בלקוח
-    public void sayHello(){
-        System.out.println("hello");
-    }
 
-
-    @RequestMapping("sign-up")
-    public BasicResponse addUser (String username, String password) {
-        if (username != null && !username.isEmpty()) {
-            if (password != null && !password.isEmpty()) {
-                User user = new User(username, GeneralUtils.hash("", password)); // עם ססמה מגובבת
+    @RequestMapping("/sign-up")
+    public BasicResponse addUser(@RequestParam String username, @RequestParam String password) { // אנוטציה ריקווסט פאראם ולא באדי כי בצד לקוח שולחים משתנים ולא אובייקט עם שדות בבקשת פוסט
+        if (username != null && !username.isEmpty()) { // נבדוק שהוכנס שפ משתמש
+            boolean exists = dbManager.checkIfUsernameExists(username); // בדיקה אם אותו שם משתמש כבר קיים כדי לא לאפשר ליוזר חדש להרשם עם אותו שם משתמש
+            if (exists) {
+                return new BasicResponse(false, ERROR_USERNAME_ALREADY_EXISTS);
+            }
+            if (password != null && !password.isEmpty()) { // אם אפשר ליצור יוזרניים כזה שהוכנסה ססמה
+                User user = new User(username, GeneralUtils.hash("", password)); // סיסמה מגובבת
                 dbManager.createUserOnDb(user);
                 return new BasicResponse(true, null);
             } else {
@@ -40,19 +41,8 @@ public class GenaralController {
     }
 
 
-    @RequestMapping("is-username-available")
-    public BasicResponse isUsernameAvailable (String username) { // האם היוזר כבר קיים או לא (העת הרשמה)
-        if (username != null && !username.isEmpty()) {
-            boolean available = dbManager.isUsernameAvailable(username);
-            return new BooleanResponse(true, null, available); // תחזור גם תשובה בוליאנית אם ניתן להרשם עם השם משתמש הזה
-        } else {
-            return new BasicResponse(false, ERROR_MISSING_USERNAME); // אם לא ניתן תחזור שגיאה רגילה
-        }
-    }
-
-
-    @RequestMapping("sign-in")
-    public BasicResponse signIn (String username, String password) { // ללא אותנטיקציה
+    @RequestMapping("/sign-in")
+    public BasicResponse signIn (@RequestParam String username, @RequestParam String password) {
         if (username != null && !username.isEmpty()) {
             if (password != null && !password.isEmpty()) {
                 password = GeneralUtils.hash("", password); //גיבוב
