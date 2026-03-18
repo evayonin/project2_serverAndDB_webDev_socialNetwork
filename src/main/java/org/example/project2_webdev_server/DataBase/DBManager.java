@@ -25,7 +25,8 @@ public class DBManager {
         }
     }
 
-    public void createUserOnDb (User user) { // להרשמה
+    public boolean createUserOnDb (User user) { // להרשמה
+        boolean success = true;
         try {
             PreparedStatement statement = this.connection.prepareStatement(
                     "INSERT INTO users (username, password)" +
@@ -34,8 +35,10 @@ public class DBManager {
             statement.setString(2, user.getPassword());
             statement.executeUpdate(); // יש שינוי בטבלה לכן אפדייט ולא קוורי כי לא חוזר משהו
         } catch (SQLException e) {
+            success = false;
             throw new RuntimeException(e);
         }
+        return success;
     }
 
     public User getUserByUsername (String username, String password) { // שיניתי שיהיה לפי שם משתמש ולא id - יותר פשוט. בשימוש בדשבורד קונטרולר
@@ -72,26 +75,24 @@ public class DBManager {
         }
     }
 
-    public User getUserByUsernameAndPassword (String username, String password) { //להתחברות
+    public boolean getUserByUsernameAndPassword (String username, String password) { //להתחברות
+        boolean success = false;
         try {
             PreparedStatement preparedStatement =
                     this.connection.prepareStatement(
                             "SELECT username, password FROM users " +
                                     "WHERE username = ? " +
-                                    "AND password = ?");
+                                    "AND password_hash = ?");//תהיה עוד עמודה של סיסמה, ועמודה של סיסמה_האש כדי שלא יגש לשם
             preparedStatement.setString(1, username);
             preparedStatement.setString(2, password); // נשמר מה שמגובב ששולחים מהמתודה עם הנתיב בקונטרולר
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.next()) {
-                String usr = resultSet.getString("username");
-                String pwd = resultSet.getString("password");
-                return new User(usr, pwd);
-            } else {
-                return null;
+                success=true;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return success;
     }
 
 
