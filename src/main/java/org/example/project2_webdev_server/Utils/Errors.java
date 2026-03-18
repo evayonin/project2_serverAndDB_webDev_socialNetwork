@@ -9,4 +9,5 @@ public class Errors {
     public static final int ERROR_MISSING_IMAGE_URL = 3005;
     public static final int ERROR_CANNOT_FOLLOW_YOURSELF = 3006;
     public static final int ERROR_MISSING_POST_CONTENT = 3007;
+    public static final int ERROR_MISSING_INVALID_TOKEN = 3008;
 }

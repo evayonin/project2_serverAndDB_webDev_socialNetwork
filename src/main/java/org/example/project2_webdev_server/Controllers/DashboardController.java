@@ -5,6 +5,7 @@
 package org.example.project2_webdev_server.Controllers;
 
 import org.example.project2_webdev_server.DataBase.DBManager;
+import org.example.project2_webdev_server.Entity.Post;
 import org.example.project2_webdev_server.Entity.User;
 import org.example.project2_webdev_server.Response.BasicResponse;
 import org.example.project2_webdev_server.Response.LoginResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -26,28 +28,26 @@ public class DashboardController {
     private DBManager dbManager;
 
 
-    @RequestMapping("/dashboard/profile") // הצגת הפרופיל של היוזר
-    public BasicResponse getProfile(
-            @RequestParam String username,
-            @RequestParam String password
-    ) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
-
-        User user = dbManager.getUserByUsername(username ,password); // תוסיפי מתודה כזו אם אין
-        return new LoginResponse(true, null, user);
+    @RequestMapping("/dashboard/profile") // הצגת הפרופיל של היוזר, שיניתי כך שכל פעם יגש רק לטוקן ויבדוק אם ריק או לא
+    public ObjectResponse getProfile( @RequestParam String token) {
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN,null);
+        }
+        return new ObjectResponse(true, null, user);
     }
 
 
     @RequestMapping("/dashboard/profile-image") // הוספת תמונת פרופיל
-    public BasicResponse updateProfileImage(@RequestParam String username, @RequestParam String password, @RequestParam String imageUrl) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
-
+    public BasicResponse updateProfileImage(@RequestParam String token, @RequestParam String imageUrl) {
         if (imageUrl == null || imageUrl.isEmpty()) {
             return new BasicResponse(false, ERROR_MISSING_IMAGE_URL);
         }
-        dbManager.updateUserProfileImage(username, imageUrl); // צריך להוסיף את המתודה בדאטה בייס מנג׳ר
+        boolean success = dbManager.updateUserProfileImage(token, imageUrl);
+        if (!success) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
+
         return new BasicResponse(true, null);
     }
 
@@ -82,7 +82,7 @@ public class DashboardController {
             return new BasicResponse(false, ERROR_NO_ACCOUNT);
         }
 
-        dbManager.addFollow(username, targetUsername); // צריך להוסיף את המתודה (זה יהיה אפדייט)
+        dbManager.followUser(username, targetUsername); // צריך להוסיף את המתודה (זה יהיה אפדייט) - עשיתי (אנה)
         return new BasicResponse(true, null);
     }
 
@@ -91,11 +91,11 @@ public class DashboardController {
     public BasicResponse getMyPosts(
             @RequestParam String username,
             @RequestParam String password
-    ) {
+    ) throws SQLException {
         boolean exists = dbManager.checkIfUsernameExists(username);
         if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
 
-        List<Map<String, Object>> posts = dbManager.getPostsByAuthor(username); // צריך להוסיף את המתודה
+        Map<String, List<Post>> posts = dbManager.getPostsByAuthor(username); // צריך להוסיף את המתודה
         return new ObjectResponse(true, null, posts);
     }
 

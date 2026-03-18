@@ -27,7 +27,7 @@ public class GenaralController {
         Integer errorCode = ERROR_NO_ACCOUNT;
         if (user != null && user.getUsername() != null) { // נבדוק שהוכנס שפ משתמש
             if (!this.dbManager.checkIfUsernameExists(user.getUsername())) {
-                user.setPassword(GeneralUtils.hashPassword(user.getPassword()));
+                user.setPassword(GeneralUtils.hashPassword(user.getPassword()));//לא בטוחה אם צריך לעדכן בעמודת הסיסמה או בעמודת הסיסמה_האש
             }
             if (this.dbManager.createUserOnDb(user)) {
                 success = true;
@@ -40,13 +40,13 @@ public class GenaralController {
     //שינויים: במחלקה של הגיבוב שיניתי שזה יגבב *רק* סיסמה, ושיניתי במתודת הרשמה שזה מקבל אובייקט ויוצר סיסמה מגובבת ומחזיר בייסיק רספונס. 18.03.2026
 
 
-    @PostMapping("/sign-in")
-    public LoginResponse signIn(@RequestParam String username, @RequestParam String password) {
+    @PostMapping("/sign-in")//אני לא סיימתי, רוצה לחכות עד שאת תסתכלי על הכל
+    public LoginResponse signIn(@RequestBody User user) {
         boolean success = false;
         Integer errorCode = ERROR_NO_ACCOUNT;
-        String token = GeneralUtils.hashPassword(password + username);//להתחברות
-        dbManager.updateUserToken(username, token); //צריך ליצור מתודה כזאת בDB
-        if (username != null && !username.isEmpty()) {
+        String token = GeneralUtils.hashPassword(user.getUsername()+user.getPassword());//להתחברות
+        dbManager.updateUserToken(user.getUsername(), token); //צריך ליצור מתודה כזאת בDB?
+        if (user.getUsername() != null && !user.getUsername().isEmpty()) {
             if (this.dbManager.getUserByUsernameAndPassword(username, token)) {
                 success = true;
                 errorCode = null;

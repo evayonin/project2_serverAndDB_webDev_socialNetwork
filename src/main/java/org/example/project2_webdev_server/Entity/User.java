@@ -4,13 +4,40 @@ public class User {
     private int id; // יהיה הpk בטבלת יוזרים ו-auto incremented אבל כרגע לא בשימוש בשום מקום
     private String username;
     private String password;
+    private String imageURL;
+    private int followers;
+    private int following;
 
     public User () {
+    }
+
+    public int getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(int followers) {
+        this.followers = followers;
+    }
+
+    public int getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(int following) {
+        this.following = following;
     }
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
     }
 
     public int getId() { // אולי נוריד
