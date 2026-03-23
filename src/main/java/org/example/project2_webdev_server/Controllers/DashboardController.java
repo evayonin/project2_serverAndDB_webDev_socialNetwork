@@ -11,6 +11,7 @@ import org.example.project2_webdev_server.Response.BasicResponse;
 import org.example.project2_webdev_server.Response.LoginResponse;
 import org.example.project2_webdev_server.Response.ObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,29 +21,44 @@ import java.util.List;
 import java.util.Map;
 
 import static org.example.project2_webdev_server.Utils.Errors.*;
-
 @RestController
 public class DashboardController {
 
     @Autowired
     private DBManager dbManager;
 
+    @RequestMapping("/dashboard/profile")
+    public BasicResponse getProfile(@RequestHeader("Authorization") String token) {
+        if (token == null || token.isEmpty()) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-    @RequestMapping("/dashboard/profile") // הצגת הפרופיל של היוזר, שיניתי כך שכל פעם יגש רק לטוקן ויבדוק אם ריק או לא
-    public ObjectResponse getProfile( @RequestParam String token) {
         User user = dbManager.getUserByToken(token);
         if (user == null) {
-            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN,null);
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
         }
+
         return new ObjectResponse(true, null, user);
     }
 
+    @RequestMapping("/dashboard/profile-image")
+    public BasicResponse updateProfileImage(
+            @RequestHeader("Authorization") String token,
+            @RequestParam String imageUrl
+    ) {
+        if (token == null || token.isEmpty()) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
 
-    @RequestMapping("/dashboard/profile-image") // הוספת תמונת פרופיל
-    public BasicResponse updateProfileImage(@RequestParam String token, @RequestParam String imageUrl) {
         if (imageUrl == null || imageUrl.isEmpty()) {
             return new BasicResponse(false, ERROR_MISSING_IMAGE_URL);
         }
+
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
+
         boolean success = dbManager.updateUserProfileImage(token, imageUrl);
         if (!success) {
             return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
@@ -51,29 +67,40 @@ public class DashboardController {
         return new BasicResponse(true, null);
     }
 
+    @RequestMapping("/dashboard/following")
+    public BasicResponse getFollowing(@RequestHeader("Authorization") String token) {
+        if (token == null || token.isEmpty()) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-    @RequestMapping("/dashboard/following") // יחזיר את רשימת היוזים שהיוזר עוקב אחריהם
-    public BasicResponse getFollowing(@RequestParam String username, @RequestParam String password) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-        List<String> following = dbManager.getFollowing(username, password);
-
-        // פתרון פשוט: להחזיר Map (Spring יחזיר JSON)
+        List<String> following = dbManager.getFollowing(user.getUsername());
         return new ObjectResponse(true, null, following);
     }
 
+    @RequestMapping("/dashboard/follow")
+    public BasicResponse followUser(
+            @RequestHeader("Authorization") String token,
+            @RequestParam String targetUsername
+    ) {
+        if (token == null || token.isEmpty()) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
 
-    @RequestMapping("/dashboard/follow") //כשהיוזר רוצה לעשות עוקב ליוזר אחר
-    public BasicResponse followUser(@RequestParam String username, @RequestParam String password, @RequestParam String targetUsername) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
 
         if (targetUsername == null || targetUsername.isEmpty()) {
             return new BasicResponse(false, ERROR_MISSING_USERNAME);
         }
 
-        if (username.equals(targetUsername)) {
+        if (user.getUsername().equals(targetUsername)) {
             return new BasicResponse(false, ERROR_CANNOT_FOLLOW_YOURSELF);
         }
 
@@ -82,52 +109,63 @@ public class DashboardController {
             return new BasicResponse(false, ERROR_NO_ACCOUNT);
         }
 
-        dbManager.followUser(username, targetUsername); // צריך להוסיף את המתודה (זה יהיה אפדייט) - עשיתי (אנה)
+        boolean success = dbManager.followUser(user.getUsername(), targetUsername);
+        if (!success) {
+            return new BasicResponse(false, ERROR_GENERAL);
+        }
+
         return new BasicResponse(true, null);
     }
 
+    @RequestMapping("/dashboard/my-posts")
+    public BasicResponse getMyPosts(@RequestHeader("Authorization") String token) throws SQLException {
+        if (token == null || token.isEmpty()) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-    @RequestMapping("/dashboard/my-posts") // יציג ליוזר את הפוסטים שלו
-    public BasicResponse getMyPosts(
-            @RequestParam String username,
-            @RequestParam String password
-    ) throws SQLException {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-        Map<String, List<Post>> posts = dbManager.getPostsByAuthor(username); // צריך להוסיף את המתודה
+        Map<String, List<Post>> posts = dbManager.getPostsByAuthor(user.getUsername());
         return new ObjectResponse(true, null, posts);
     }
 
-
-    @RequestMapping("/dashboard/new-post") // כשהיוזר יוצר פוסט חדש
+    @RequestMapping("/dashboard/new-post")
     public BasicResponse createPost(
-            @RequestParam String username,
-            @RequestParam String password,
+            @RequestHeader("Authorization") String token,
             @RequestParam String content
     ) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
+        if (token == null || token.isEmpty()) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
+
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
+        }
 
         if (content == null || content.trim().isEmpty()) {
             return new BasicResponse(false, ERROR_MISSING_POST_CONTENT);
         }
 
-        Map<String, Object> created = dbManager.createPost(username, content.trim()); // צריך להוסיף את המתודה
+        Map<String, Object> created = dbManager.createPost(user.getUsername(), content.trim());
         return new ObjectResponse(true, null, created);
     }
 
+    @RequestMapping("/dashboard/feed")
+    public BasicResponse getFeed(@RequestHeader("Authorization") String token) {
+        if (token == null || token.isEmpty()) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-    @RequestMapping("/dashboard/feed") // הצגת הפיד של היוזר שמכיל את 20 הפוסטים האחרונים של היוזרים שהוא עוקב אחריהם
-    public BasicResponse getFeed(
-            @RequestParam String username,
-            @RequestParam String password
-    ) {
-        boolean exists = dbManager.checkIfUsernameExists(username);
-        if (!exists) return new BasicResponse(false, ERROR_NO_ACCOUNT);
+        User user = dbManager.getUserByToken(token);
+        if (user == null) {
+            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+        }
 
-        List<Map<String, Object>> feed = dbManager.getFeedPosts(username, 20); // צריך להוסיף את המתודה
+        List<Map<String, Object>> feed = dbManager.getFeedPosts(user.getUsername(), 20);
         return new ObjectResponse(true, null, feed);
     }
 }
-
