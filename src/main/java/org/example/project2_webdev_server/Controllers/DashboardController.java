@@ -99,7 +99,7 @@ public class DashboardController {
         return new ObjectResponse(true, null, following);
     }
 
-    @RequestMapping("/dashboard/follow")
+    @RequestMapping("/dashboard/follow") // מעקב אחרי משתמש חדש
     public BasicResponse followUser(
             @RequestHeader("Authorization") String token,
             @RequestParam String targetUsername
@@ -128,7 +128,7 @@ public class DashboardController {
 
         boolean success = dbManager.followUser(user.getUsername(), targetUsername);
         if (!success) {
-            return new BasicResponse(false, ERROR_GENERAL);
+            return new BasicResponse(false, ERROR_GENERAL); //לשנות שם
         }
 
         return new BasicResponse(true, null);
@@ -149,7 +149,7 @@ public class DashboardController {
         return new ObjectResponse(true, null, posts);
     }
 
-    @RequestMapping("/dashboard/new-post")
+    @RequestMapping("/dashboard/new-post") // הוספת פוסט חדש שלי
     public BasicResponse createPost(
             @RequestHeader("Authorization") String token,
             @RequestParam String content
@@ -167,11 +167,11 @@ public class DashboardController {
             return new BasicResponse(false, ERROR_MISSING_POST_CONTENT);
         }
 
-        Map<String, Object> created = dbManager.createPost(user.getUsername(), content.trim());
+        Map<String, Object> created = dbManager.createPost(user.getUsername(), content.trim()); // להוסיף מתודה כזאת
         return new ObjectResponse(true, null, created);
     }
 
-    @RequestMapping("/dashboard/feed")
+    @RequestMapping("/dashboard/feed") // הפוסטים של הנעקבים שלי
     public BasicResponse getFeed(@RequestHeader("Authorization") String token) {
         if (token == null || token.isEmpty()) {
             return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
@@ -182,7 +182,7 @@ public class DashboardController {
             return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
         }
 
-        List<Map<String, Object>> feed = dbManager.getFeedPosts(user.getUsername(), 20);
+        List<Map<String, Object>> feed = dbManager.getFeedPosts(user.getUsername(), 20); // להוסיף מתודה כזאת
         return new ObjectResponse(true, null, feed);
     }
 }

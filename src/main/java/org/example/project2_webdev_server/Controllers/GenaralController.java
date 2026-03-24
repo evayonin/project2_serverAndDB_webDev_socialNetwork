@@ -36,33 +36,31 @@ public class GenaralController {
         }
         return new BasicResponse(success, errorCode);
     }
-    //שינויים: במחלקה של הגיבוב שיניתי שזה יגבב *רק* סיסמה, ושיניתי במתודת הרשמה שזה מקבל אובייקט ויוצר סיסמה מגובבת ומחזיר בייסיק רספונס. 18.03.2026
-
 
     @PostMapping("/sign-in")
-    public BasicResponse signIn(@RequestBody User user) {
-        boolean success = false;
-        Integer errorCode = ERROR_NO_ACCOUNT;
-        if (user != null) {
-            if(user.getUsername() == null || user.getUsername().trim().isEmpty()){
-                errorCode = ERROR_EMPTY_FIELD;
-            }
-            else if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
-                errorCode = ERROR_EMPTY_FIELD;
-            }
-            // להתחברות
-            String token = GeneralUtils.hashPassword(user.getPassword()); // גיבוב הססמה בלבד
-            dbManager.updateUserToken(user.getUsername(), token);
-            if (user.getUsername() != null && !user.getUsername().isEmpty()) {
-                if (this.dbManager.getUserByUsernameAndPassword(user.getUsername(), token)) {
-                    success = true;
-                    errorCode = null;
-                }
-            }
-            return new LoginResponse(success, errorCode, token);
+    public LoginResponse signIn(@RequestBody User user) {
+        if (user == null) {
+            return new LoginResponse(false, ERROR_EMPTY_FIELD, null);
         }
-        return new BasicResponse(success, errorCode);
-    }
+        String username = user.getUsername();
+        String password = user.getPassword();
+        if (username == null || username.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+            return new LoginResponse(false, ERROR_EMPTY_FIELD, null);
+        }
+        username = username.trim();
+        password = password.trim();
+        boolean isValidUser = dbManager.getUserByUsernameAndPassword(username, password); // בדיקה שהיוזר תקין במסד הנתונים
+        if (!isValidUser) {
+            return new LoginResponse(false, ERROR_WRONG_CREDENTIALS, null);
+        }
+        // יצירת טוקן לאחר ההתחברות ושמירה בטבלה לבקשות עתידיות באמצעותו:
+        String token = java.util.UUID.randomUUID().toString();
 
+        if (!dbManager.updateUserToken(username, token)) {
+            return new LoginResponse(false, ERROR_UPDATE_TOKEN_FAILED, null);
+        }
+        return new LoginResponse(true, null, token);
+    }
 
 }
