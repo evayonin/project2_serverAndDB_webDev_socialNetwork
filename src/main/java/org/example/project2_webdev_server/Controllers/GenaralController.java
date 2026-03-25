@@ -50,7 +50,8 @@ public class GenaralController {
         }
         username = username.trim();
         password = password.trim();
-        boolean isValidUser = dbManager.getUserByUsernameAndPassword(username, password); // בדיקה שהיוזר תקין במסד הנתונים
+        String hashedPassword = GeneralUtils.hashPassword(password); // הססמה ששמורה במסד הנתונים
+        boolean isValidUser = dbManager.getUserByUsernameAndPassword(username, hashedPassword); // בדיקה שהיוזר תקין במסד הנתונים
         if (!isValidUser) {
             return new LoginResponse(false, ERROR_WRONG_CREDENTIALS, null);
         }

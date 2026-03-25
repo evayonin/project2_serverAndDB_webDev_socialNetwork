@@ -14,7 +14,7 @@ import java.util.Map;
 public class DBManager {
     private static final String URL = "jdbc:mysql://localhost:3306/project2";   // אנה שימי לב! כשנגדיר את הדאטה בייס זה יהיה עם הפרטים האלה וחייב לקרוא לסכמה "project2"
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "878982eva"; // אנה כשאת מריצה אצלך שימי 1234
+    private static final String PASSWORD = "1234"; // לשנות לססמה שלי
 
     private Connection connection;
 
@@ -111,7 +111,7 @@ public class DBManager {
             PreparedStatement preparedStatement =
                     this.connection.prepareStatement(
                              "SELECT followed_username " +
-                                     "FROM followers " +
+                                     "FROM follows " +
                                      "WHERE follower_username = ?;");
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -133,7 +133,7 @@ public class DBManager {
             PreparedStatement preparedStatement =
                     this.connection.prepareStatement(
                             "SELECT follower_username " +
-                                    "FROM followers " +
+                                    "FROM follows " +
                                     "WHERE followed_username = ?;");
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -290,7 +290,7 @@ public class DBManager {
         String sql =
                 "SELECT p.id, p.author_username, p.content, p.created_at " +
                         "FROM posts p " +
-                        "JOIN followers f ON p.author_username = f.followed_username " +
+                        "JOIN follows f ON p.author_username = f.followed_username " +
                         "WHERE f.follower_username = ? " +
                         "ORDER BY p.created_at DESC " +
                         "LIMIT ?";
