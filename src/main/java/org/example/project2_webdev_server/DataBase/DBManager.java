@@ -14,7 +14,7 @@ import java.util.Map;
 public class DBManager {
     private static final String URL = "jdbc:mysql://localhost:3306/project2";   // אנה שימי לב! כשנגדיר את הדאטה בייס זה יהיה עם הפרטים האלה וחייב לקרוא לסכמה "project2"
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "1234"; // לשנות לססמה שלי
+    private static final String PASSWORD = "878982eva"; // לשנות לססמה שלי
 
     private Connection connection;
 
@@ -124,8 +124,6 @@ public class DBManager {
         return following;
     }
 
-    // לבדוק אם צריך לשנות את הטבלה והשאילתא
-    // SELECT u.username FROM follows f JOIN users u ON f.follower_id = u.id WHERE f.followed_id = ?"
 
     public List<String> getFollowers (String username){ // תחזיר את רשימת האנשים שעוקבים אחרי היוזר המחובר
         List<String> followers = new ArrayList<>();
@@ -203,17 +201,30 @@ public class DBManager {
     }
 
 
-    public boolean followUser(String token, String targetUsername) {
-        User user = getUserByToken(token);
-        if(user == null||user.getUsername().equals(targetUsername)) {
+    public boolean followUser(String followerUsername, String followedUsername) { //מתוקן
+        if (followerUsername == null || followerUsername.trim().isEmpty() ||
+                followedUsername == null || followedUsername.trim().isEmpty()) {
+            System.out.println("followUser failed: empty input");
             return false;
         }
-        try (PreparedStatement statement = this.connection.prepareStatement("INSERT INTO follows (follower_username, followed_username) VALUES (?, ?)")) {
-            statement.setString(1, user.getUsername()); //אני העוקב
-            statement.setString(2, targetUsername);    //הוא הנעקב
-            statement.executeUpdate();
-            return true;
+        String sql = "INSERT INTO follows (follower_username, followed_username) VALUES (?, ?)";
+        try (PreparedStatement ps = this.connection.prepareStatement(sql)) {
+            System.out.println("trying insert:"); // בדיקה שהגיע לפה
+            System.out.println("follower = [" + followerUsername + "]");
+            System.out.println("followed = [" + followedUsername + "]");
+
+            ps.setString(1, followerUsername.trim()); // חייב trim אם הוכנס רווח!
+            ps.setString(2, followedUsername.trim());
+
+            int rows = ps.executeUpdate();
+            System.out.println("rows inserted = " + rows); // בדיקה שהגיע לפה
+            return rows == 1; // אם נוספה שורה בטבלת המעקב בupdate יחזיר true
+
         } catch (SQLException e) {
+            System.out.println("SQL state: " + e.getSQLState());
+            System.out.println("Error code: " + e.getErrorCode());
+            System.out.println("Message: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -245,7 +256,6 @@ public class DBManager {
     }
 
 
-    // המתודה שהוספתי:
     public Post createPost(String username, String content) {
         if (username == null || username.trim().isEmpty() ||
                 content == null || content.trim().isEmpty()) {
@@ -281,7 +291,6 @@ public class DBManager {
     }
 
 
-    // המתודה שהוספתי:
     public List<Post> getFeedPosts(String username, int limit) {
         List<Post> posts = new ArrayList<>();
         if (username == null || username.trim().isEmpty()) {
