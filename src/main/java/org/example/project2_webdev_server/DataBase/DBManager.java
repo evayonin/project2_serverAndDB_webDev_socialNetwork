@@ -88,7 +88,7 @@ public class DBManager {
                     this.connection.prepareStatement(
                             "SELECT username, password FROM users " +
                                     "WHERE username = ? " +
-                                    "AND password_hash = ?");//תהיה עוד עמודה של סיסמה, ועמודה של סיסמה_האש כדי שלא יגש לשם
+                                    "AND password = ?");
             preparedStatement.setString(1, username);
             preparedStatement.setString(2, password); // נשמר מה שמגובב ששולחים מהמתודה עם הנתיב בקונטרולר
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -110,8 +110,8 @@ public class DBManager {
         try {
             PreparedStatement preparedStatement =
                     this.connection.prepareStatement(
-                             "SELECT followed_username" +
-                                     "FROM follows" +
+                             "SELECT followed_username " +
+                                     "FROM followers " +
                                      "WHERE follower_username = ?;");
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -132,8 +132,8 @@ public class DBManager {
         try {
             PreparedStatement preparedStatement =
                     this.connection.prepareStatement(
-                            "SELECT follower_username" +
-                                    "FROM follows" +
+                            "SELECT follower_username " +
+                                    "FROM followers " +
                                     "WHERE followed_username = ?;");
             preparedStatement.setString(1, username);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -224,9 +224,9 @@ public class DBManager {
         if (username == null || username.trim().isEmpty()) {
             return posts;
         }
-        String sql = "SELECT id, author, text, timestamp " +
+        String sql = "SELECT id, author_username, content, created_at " +
                 "FROM posts " +
-                "WHERE author = ? " +
+                "WHERE author_username = ? " +
                 "ORDER BY created_at DESC";
         try (PreparedStatement preparedStatement = this.connection.prepareStatement(sql)) {
             preparedStatement.setString(1, username);
