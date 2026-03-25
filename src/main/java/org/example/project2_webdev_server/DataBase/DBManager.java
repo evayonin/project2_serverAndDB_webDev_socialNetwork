@@ -88,7 +88,7 @@ public class DBManager {
                     this.connection.prepareStatement(
                             "SELECT username, password FROM users " +
                                     "WHERE username = ? " +
-                                    "AND password_hash = ?");//תהיה עוד עמודה של סיסמה, ועמודה של סיסמה_האש כדי שלא יגש לשם
+                                    "AND password = ?");
             preparedStatement.setString(1, username);
             preparedStatement.setString(2, password); // נשמר מה שמגובב ששולחים מהמתודה עם הנתיב בקונטרולר
             ResultSet resultSet = preparedStatement.executeQuery();
