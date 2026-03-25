@@ -187,19 +187,17 @@ public class DashboardController {
 
     // צריך להוסיף בדיבי מנג׳ר
     @RequestMapping("/dashboard/search-users") // תחזור רשימת שמות המשתמשים הרלוונטים למה שהוכנס חיפוש
-    public ObjectResponse searchUsers(
+    public BasicResponse searchUsers(
             @RequestHeader("Authorization") String token,
-            @RequestParam String query
+            @RequestParam String query // התווים שהיוזר הכניס לחיפוש משתמשים
     ) {
         User user = authenticateUser(token);
         if (user == null) {
-            return new ObjectResponse(false, ERROR_MISSING_INVALID_TOKEN, null);
+            return new BasicResponse(false, ERROR_MISSING_INVALID_TOKEN);
         }
-
         if (query == null || query.trim().isEmpty()) {
-            return new ObjectResponse(true, null, List.of());
+            return new ObjectResponse(true, null, List.of()); // אם אין יוזרים רלוונטים ליחופש יביא רשימה ריקה עם אורך 0 בהתאם למה שבלקוח (לא יציג כלום)
         }
-
         List<String> users = dbManager.searchUsers(query.trim(), user.getUsername());
         return new ObjectResponse(true, null, users);
     }

@@ -315,17 +315,35 @@ public class DBManager {
     }
 
 
-
-
-
-    // צריך להוסיף מתודה של search users
+    public List<String> searchUsers(String query, String username) { // חיפוש משתמשים לעקוב אחריהם
+        List<String> users = new ArrayList<>();
+        if (query == null || query.trim().isEmpty()) {
+            return users; // יחזיר רשימה ריקה
+        }
+        String sql = "SELECT username FROM users " +
+                "WHERE username LIKE ? " +
+                "AND username <> ? " + // <> אומר שהערך השמאלי לא שווה לימני - כלומר היוזר לא יכול לחפש את עצמו
+                "LIMIT 10";
+        try (PreparedStatement ps = this.connection.prepareStatement(sql)) {
+            ps.setString(1, query.trim() + "%"); // היוזרניים מתחיל בתווים שיש בquery (% בסוף)
+            ps.setString(2, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(rs.getString("username"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+        return users;
+    }
 
 
 
 
 
     /*
-    צריך ליצור סכמה עם שם מתאים!
     בסה״כ יהיו לנו 3 טבלאות - טבלת יוזרים, טבלת עוקבים-נעקבים וטבלת פוסטים של יוזרים
 
      טבלת היוזרים שנגדיר בהמשך:
@@ -333,8 +351,8 @@ public class DBManager {
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(100) NOT NULL,
-    profile_image_url VARCHAR(255) // יכול להיות נאל כי בהוספת יוזר חדש עדיין אין קישור בטבלה
-    לא לשכוח להוסיף עמודה של טוקן!!!
+    profile_image_url VARCHAR(255), // יכול להיות נאל כי בהוספת יוזר חדש עדיין אין קישור בטבלה
+    token VARCHAR(255)
 );
 
      טבלת העוקבים-נעקבים:
@@ -353,20 +371,6 @@ public class DBManager {
         ON DELETE CASCADE
 );
 
-בקשור לטבלת העוקבים - נעקבים:
-
-שאילתא - מי עוקב אחרי יוזר מסוים:
-SELECT follower_username
-FROM follows
-WHERE followed_username = ?;
-
-שאילתא - מי היוזר המסויים עוקב אחריהם:
-SELECT followed_username
-FROM follows
-WHERE follower_username = ?;
-
-
-
 טבלת הפוסטים:
 
 CREATE TABLE posts (
@@ -379,20 +383,6 @@ CREATE TABLE posts (
         REFERENCES users(username)
         ON DELETE CASCADE
 );
-
-
-
-   עוד מתודות שנצטרך להוסיף לכאן בהמשך:
-
-void updateUserProfileImage(String username, String imageUrl) עשיתי
-
-void addFollow(String followerUsername, String followedUsername) עשיתי, אבל לא יהיה ווייד, יחזיר בוליאן נראה לי
-
-List<Map<String, Object>> getPostsByAuthor(String username)
-
-Map<String, Object> createPost(String username, String content)
-
-List<Map<String, Object>> getFeedPosts(String username, int limit)
 
      */
 }
